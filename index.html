@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classement Poker</title>
+<style>
+:root{
+  --bg:#f4f1ea; --surface:#ffffff; --surface-2:#eef0ea; --text:#1c2620;
+  --text-dim:#5b665e; --border:#dcd9cc; --felt:#1f5c3f; --felt-2:#144230;
+  --gold:#c8973a; --danger:#b3432b; --danger-bg:#f6e3dd; --radius:14px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12100c; --surface:#1c1a15; --surface-2:#221f19; --text:#f1ede2;
+    --text-dim:#a8a396; --border:#332f26; --felt:#1f5c3f; --felt-2:#123826;
+    --gold:#dbaa4e; --danger:#e0725a; --danger-bg:#3a2019;
+  }
+}
+html,body{height:100%;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom,0px));}
+header{background:linear-gradient(135deg,var(--felt),var(--felt-2));color:#f4f1ea;border-radius:var(--radius);padding:20px 18px;margin-bottom:18px;box-shadow:0 4px 14px rgba(0,0,0,.15);}
+header h1{margin:0 0 4px;font-size:1.4rem;display:flex;align-items:center;gap:8px;}
+header p{margin:0;font-size:.85rem;color:#d9e6dd;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.card h2{margin:0 0 12px;font-size:1rem;display:flex;align-items:center;gap:6px;}
+table{width:100%;border-collapse:collapse;font-size:.92rem;}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--border);}
+th{color:var(--text-dim);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;}
+tr:last-child td{border-bottom:none;}
+td.num,th.num{text-align:right;}
+.rank-cell{font-weight:700;white-space:nowrap;}
+.empty{color:var(--text-dim);font-size:.9rem;padding:8px 2px;}
+.row-inline{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+input[type="text"]{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:.95rem;color:var(--text);}
+button{font-family:inherit;font-size:.9rem;font-weight:600;border:none;border-radius:10px;padding:10px 14px;cursor:pointer;white-space:nowrap;}
+.btn-primary{background:var(--felt);color:#fff;}
+.btn-primary:active{background:var(--felt-2);}
+.btn-ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);}
+.btn-out{background:var(--danger-bg);color:var(--danger);padding:8px 12px;font-size:.85rem;}
+.btn-icon{background:transparent;color:var(--text-dim);padding:4px 8px;font-size:1rem;}
+.player-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.chip{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:6px 6px 6px 12px;font-size:.88rem;}
+.chip button{padding:2px 6px;font-size:.85rem;line-height:1;}
+.select-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.select-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);}
+.select-row input[type="checkbox"]{width:18px;height:18px;flex-shrink:0;}
+.active-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface-2);}
+.eliminated-list{font-size:.85rem;color:var(--text-dim);margin-top:10px;}
+.eliminated-list ol{margin:6px 0 0;padding-left:20px;}
+.winner-banner{background:linear-gradient(135deg,var(--gold),#a97a24);color:#2a1d05;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.history-item{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.history-item .hh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.history-item .hh strong{font-size:.92rem;}
+.history-item ol{margin:0;padding-left:20px;font-size:.85rem;}
+.history-item ol li{margin-bottom:2px;}
+.footer-note{text-align:center;font-size:.78rem;color:var(--text-dim);margin-top:6px;}
+.medal{margin-right:4px;}
+.sync-banner{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--felt);flex-shrink:0;}
+.sync-dot.off{background:var(--danger);}
+.share-card{border:1px dashed var(--gold);}
+.share-row{display:flex;gap:8px;align-items:center;}
+.share-row input{font-size:.78rem;}
+.stat-sub{font-size:.75rem;color:var(--text-dim);}
+.loading{text-align:center;padding:60px 20px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Chargement\u2026</div></div>
+<script>
+(function(){
+  "use strict";
+  var API_BASE = "https://jsonblob.com/api/jsonBlob/";
+  var LOCAL_KEY = "classement_poker_local_fallback_v1";
+  var POLL_MS = 7000;
+
+  var state = {players:[], tournaments:[], current:null};
+  var roomId = null;
+  var selectedForNewTournament = {};
+  var syncOk = false;
+  var saving = false;
+  var lastSavedJson = "";
+  var lastErrorDetail = "";
+  var initFailed = false;
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function getRoomFromUrl(){
+    var params = new URLSearchParams(window.location.search);
+    return params.get("room");
+  }
+
+  function setRoomInUrl(id){
+    var url = new URL(window.location.href);
+    url.searchParams.set("room", id);
+    window.history.replaceState({}, "", url.toString());
+  }
+
+  function shareUrl(){
+    var url = new URL(window.location.href);
+    url.searchParams.set("room", roomId);
+    return url.toString();
+  }
+
+  function saveLocalFallback(){
+    try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  function loadLocalFallback(){
+    try{
+      var raw = localStorage.getItem(LOCAL_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  function fetchRoom(id){
+    return fetch(API_BASE + id, {headers:{"Accept":"application/json"}}).then(function(r){
+      if(!r.ok) throw new Error("fetch failed");
+      return r.json();
+    });
+  }
+
+  function createRoom(initialState){
+    return fetch(API_BASE.replace(/\/$/, ""), {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify(initialState)
+    }).then(function(r){
+      if(!r.ok){
+        lastErrorDetail = "Cr\u00e9ation refus\u00e9e (code " + r.status + ")";
+        throw new Error(lastErrorDetail);
+      }
+      var loc = r.headers.get("Location") || r.headers.get("location");
+      if(!loc){
+        lastErrorDetail = "Le serveur n'a pas renvoy\u00e9 d'identifiant de salon lisible par le navigateur (probl\u00e8me CORS c\u00f4t\u00e9 service).";
+        throw new Error(lastErrorDetail);
+      }
+      var id = loc.split("/").pop();
+      return id;
+    }).catch(function(err){
+      if(!lastErrorDetail){
+        lastErrorDetail = (err && err.message) ? err.message : "Erreur r\u00e9seau inconnue (bloqu\u00e9 par le navigateur ou le service injoignable).";
+      }
+      throw err;
+    });
+  }
+
+  function pushState(){
+    if(!roomId) return;
+    var json = JSON.stringify(state);
+    if(json === lastSavedJson) return;
+    saving = true;
+    fetch(API_BASE + roomId, {
+      method:"PUT",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body: json
+    }).then(function(r){
+      if(!r.ok) throw new Error("save failed");
+      lastSavedJson = json;
+      syncOk = true;
+      saving = false;
+    }).catch(function(){
+      syncOk = false;
+      saving = false;
+      saveLocalFallback();
+      renderSyncBannerOnly();
+    });
+  }
+
+  function pollRoom(){
+    if(!roomId || saving) return;
+    fetchRoom(roomId).then(function(data){
+      syncOk = true;
+      var incomingJson = JSON.stringify(data);
+      if(incomingJson !== lastSavedJson && incomingJson !== JSON.stringify(state)){
+        state = data;
+        lastSavedJson = incomingJson;
+        render();
+      } else {
+        renderSyncBannerOnly();
+      }
+    }).catch(function(){
+      syncOk = false;
+      renderSyncBannerOnly();
+    });
+  }
+
+  function playerName(id){
+    var p = state.players.filter(function(pl){ return pl.id === id; })[0];
+    return p ? p.name : "(joueur supprim\u00e9)";
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function computeStats(){
+    var totals={}, wins={}, played={};
+    state.players.forEach(function(p){ totals[p.id]=0; wins[p.id]=0; played[p.id]=0; });
+    state.tournaments.forEach(function(t){
+      t.participants.forEach(function(pid){
+        if(played.hasOwnProperty(pid)) played[pid]++;
+        if(totals.hasOwnProperty(pid)) totals[pid]+=(t.points[pid]||0);
+      });
+      if(wins.hasOwnProperty(t.winnerId)) wins[t.winnerId]++;
+    });
+    return {totals:totals, wins:wins, played:played};
+  }
+
+  function tournamentStanding(t){
+    return [t.winnerId].concat(t.eliminated.slice().reverse());
+  }
+
+  function renderSyncBannerOnly(){
+    var dot = document.getElementById("sync-dot");
+    var label = document.getElementById("sync-label");
+    if(!dot || !label) return;
+    dot.classList.toggle("off", !syncOk);
+    label.textContent = syncOk ? "Synchronis\u00e9" : "Hors ligne \u2014 nouvel essai en cours\u2026";
+  }
+
+  function render(){
+    var root = document.getElementById("root");
+    var stats = computeStats();
+    var ranked = state.players.slice().sort(function(a,b){ return (stats.totals[b.id]||0)-(stats.totals[a.id]||0); });
+    var html = "";
+    html += '<div class="wrap">';
+    html += '<header><h1>\uD83C\uDCCF Classement Poker</h1><p>' + state.tournaments.length + ' tournoi(s) jou\u00e9(s) \u00B7 ' + state.players.length + ' joueur(s)</p></header>';
+
+    var syncLabelText = syncOk ? "Synchronis\u00e9" : (initFailed ? "\u00c9chec de connexion" : "Connexion\u2026");
+    html += '<div class="sync-banner"><span class="sync-dot' + (syncOk?"":" off") + '" id="sync-dot"></span><span id="sync-label">' + syncLabelText + '</span>';
+    if(initFailed){
+      html += '<button class="btn-ghost" id="retry-btn" style="margin-left:auto;padding:6px 10px;font-size:.78rem;">R\u00e9essayer</button>';
+    }
+    html += '</div>';
+
+    if(initFailed){
+      html += '<div class="card" style="border-color:var(--danger);"><h2>\u26A0\uFE0F D\u00e9tail technique</h2><p class="stat-sub" style="word-break:break-word;">' + escapeHtml(lastErrorDetail || "Erreur inconnue") + '</p><p class="stat-sub">Vous pouvez partager ce message pour obtenir de l\'aide, ou ouvrir les outils d\u00e9veloppeur du navigateur (onglet Console/R\u00e9seau) pour plus de d\u00e9tails.</p></div>';
+    }
+
+    if(roomId){
+      html += '<div class="card share-card"><h2>\uD83D\uDD17 Lien du salon</h2><p class="stat-sub">Envoyez ce lien \u00e0 vos amis : tout le monde verra les m\u00eames mises \u00e0 jour.</p>';
+      html += '<div class="share-row"><input type="text" id="share-link" readonly value="' + escapeHtml(shareUrl()) + '"><button class="btn-primary" id="copy-link-btn">Copier</button></div></div>';
+    }
+
+    html += '<div class="card"><h2>\uD83C\uDFC6 Classement g\u00e9n\u00e9ral</h2>';
+    if(ranked.length===0){
+      html += '<div class="empty">Ajoutez des joueurs pour commencer.</div>';
+    } else {
+      html += '<table><thead><tr><th>Rang</th><th>Joueur</th><th class="num">Pts</th><th class="num">\uD83C\uDFC6</th></tr></thead><tbody>';
+      var medals=['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
+      ranked.forEach(function(p,i){
+        var medal = i<3 ? '<span class="medal">'+medals[i]+'</span>' : '';
+        html += '<tr><td class="rank-cell">'+medal+(i+1)+'</td><td>'+escapeHtml(p.name)+'<div class="stat-sub">'+stats.played[p.id]+' tournoi(s)</div></td><td class="num">'+(stats.totals[p.id]||0)+'</td><td class="num">'+(stats.wins[p.id]||0)+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    html += '<div class="card"><h2>\uD83D\uDC65 Joueurs</h2>';
+    html += '<div class="player-list">';
+    state.players.forEach(function(p){
+      html += '<div class="chip">'+escapeHtml(p.name)+'<button data-action="remove-player" data-id="'+p.id+'" title="Retirer">\u2715</button></div>';
+    });
+    html += '</div>';
+    html += '<div class="row-inline"><input type="text" id="new-player-name" placeholder="Nom du joueur"><button class="btn-primary" id="add-player-btn">Ajouter</button></div>';
+    html += '</div>';
+
+    if(state.current){
+      var cur = state.current;
+      var activeIds = cur.participants.filter(function(id){ return cur.eliminated.indexOf(id)===-1; });
+      html += '<div class="card"><h2>\u2660\uFE0F Tournoi en cours\u00a0: '+escapeHtml(cur.name)+'</h2>';
+      if(activeIds.length===1){
+        html += '<div class="winner-banner">\uD83C\uDFC6 '+escapeHtml(playerName(activeIds[0]))+' remporte le tournoi\u00a0!</div>';
+        html += '<button class="btn-primary" id="finish-tournament-btn">Enregistrer le r\u00e9sultat</button>';
+      } else {
+        html += '<p class="stat-sub">Touchez un joueur pour l\'\u00e9liminer, dans l\'ordre des sorties.</p>';
+        activeIds.forEach(function(id){
+          html += '<div class="active-row"><span>'+escapeHtml(playerName(id))+'</span><button class="btn-out" data-action="eliminate" data-id="'+id+'">Sortie</button></div>';
+        });
+        if(cur.eliminated.length>0){
+          html += '<div class="eliminated-list">D\u00e9j\u00e0 sorti(s), du premier au dernier\u00a0: <ol>';
+          cur.eliminated.forEach(function(id){ html += '<li>'+escapeHtml(playerName(id))+'</li>'; });
+          html += '</ol></div>';
+        }
+      }
+      html += '<div style="margin-top:12px;"><button class="btn-ghost" id="cancel-tournament-btn">Annuler ce tournoi</button></div>';
+      html += '</div>';
+    } else {
+      html += '<div class="card"><h2>\u2795 Nouveau tournoi</h2>';
+      if(state.players.length<2){
+        html += '<div class="empty">Ajoutez au moins 2 joueurs pour d\u00e9marrer un tournoi.</div>';
+      } else {
+        html += '<div class="row-inline"><input type="text" id="tournament-name" placeholder="Nom du tournoi (optionnel)"></div>';
+        html += '<div class="select-list">';
+        state.players.forEach(function(p){
+          var checked = selectedForNewTournament[p.id] ? "checked" : "";
+          html += '<label class="select-row"><input type="checkbox" class="participant-check" data-id="'+p.id+'" '+checked+'><span>'+escapeHtml(p.name)+'</span></label>';
+        });
+        html += '</div>';
+        html += '<button class="btn-primary" id="start-tournament-btn">D\u00e9marrer le tournoi</button>';
+      }
+      html += '</div>';
+    }
+
+    if(state.tournaments.length>0){
+      html += '<div class="card"><h2>\uD83D\uDCDC Historique des tournois</h2>';
+      state.tournaments.slice().reverse().forEach(function(t){
+        var order = tournamentStanding(t);
+        html += '<div class="history-item"><div class="hh"><strong>'+escapeHtml(t.name)+'</strong><button class="btn-icon" data-action="remove-tournament" data-id="'+t.id+'" title="Supprimer">\u2715</button></div><ol>';
+        order.forEach(function(id){ html += '<li>'+escapeHtml(playerName(id))+' \u2014 '+(t.points[id]||0)+' pt(s)</li>'; });
+        html += '</ol></div>';
+      });
+      html += '</div>';
+    }
+
+    if(state.players.length>0){
+      html += '<div style="text-align:center;margin-top:4px;"><button class="btn-danger" id="reset-btn">R\u00e9initialiser tout</button></div>';
+    }
+    html += '<div class="footer-note">Donn\u00e9es partag\u00e9es via un salon en ligne gratuit (jsonblob.com).</div>';
+    html += '</div>';
+
+    root.innerHTML = html;
+    attachHandlers();
+  }
+
+  function mutate(){
+    saveLocalFallback();
+    pushState();
+    render();
+  }
+
+  function attachHandlers(){
+    var retryBtn = document.getElementById("retry-btn");
+    if(retryBtn){
+      retryBtn.addEventListener("click", function(){
+        initFailed = false;
+        lastErrorDetail = "";
+        render();
+        init();
+      });
+    }
+
+    var copyBtn = document.getElementById("copy-link-btn");
+    if(copyBtn){
+      copyBtn.addEventListener("click", function(){
+        var input = document.getElementById("share-link");
+        input.select();
+        input.setSelectionRange(0, 99999);
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(input.value).then(function(){
+            copyBtn.textContent = "Copi\u00e9 \u2713";
+            setTimeout(function(){ copyBtn.textContent = "Copier"; }, 1800);
+          }).catch(function(){
+            document.execCommand("copy");
+          });
+        } else {
+          document.execCommand("copy");
+        }
+      });
+    }
+
+    var addPlayerBtn = document.getElementById("add-player-btn");
+    if(addPlayerBtn){
+      addPlayerBtn.addEventListener("click", function(){
+        var input = document.getElementById("new-player-name");
+        var name = (input.value||"").trim();
+        if(!name) return;
+        state.players.push({id:uid(), name:name});
+        mutate();
+      });
+      document.getElementById("new-player-name").addEventListener("keydown", function(e){
+        if(e.key==="Enter"){ addPlayerBtn.click(); }
+      });
+    }
+    document.querySelectorAll('[data-action="remove-player"]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        state.players = state.players.filter(function(p){ return p.id!==id; });
+        delete selectedForNewTournament[id];
+        if(state.current){
+          state.current.participants = state.current.participants.filter(function(pid){ return pid!==id; });
+          state.current.eliminated = state.current.eliminated.filter(function(pid){ return pid!==id; });
+        }
+        mutate();
+      });
+    });
+    document.querySelectorAll(".participant-check").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-id");
+        if(cb.checked){ selectedForNewTournament[id]=true; } else { delete selectedForNewTournament[id]; }
+      });
+    });
+    var startBtn = document.getElementById("start-tournament-btn");
+    if(startBtn){
+      startBtn.addEventListener("click", function(){
+        var ids = Object.keys(selectedForNewTournament);
+        if(ids.length<2){ alert("S\u00e9lectionnez au moins 2 joueurs"); return; }
+        var nameInput = document.getElementById("tournament-name");
+        var name = (nameInput.value||"").trim() || ("Tournoi "+(state.tournaments.length+1));
+        state.current = {id:uid(), name:name, participants:ids, eliminated:[]};
+        selectedForNewTournament = {};
+        mutate();
+      });
+    }
+    document.querySelectorAll('[data-action="eliminate"]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        if(!state.current) return;
+        state.current.eliminated.push(id);
+        mutate();
+      });
+    });
+    var finishBtn = document.getElementById("finish-tournament-btn");
+    if(finishBtn){
+      finishBtn.addEventListener("click", function(){
+        if(!state.current) return;
+        var cur = state.current;
+        var activeIds = cur.participants.filter(function(id){ return cur.eliminated.indexOf(id)===-1; });
+        var winnerId = activeIds[0];
+        var n = cur.participants.length;
+        var points = {};
+        cur.eliminated.forEach(function(id, idx){ points[id]=idx+1; });
+        points[winnerId]=n;
+        state.tournaments.push({id:cur.id, name:cur.name, participants:cur.participants, eliminated:cur.eliminated, winnerId:winnerId, points:points});
+        state.current = null;
+        mutate();
+      });
+    }
+    var cancelBtn = document.getElementById("cancel-tournament-btn");
+    if(cancelBtn){
+      cancelBtn.addEventListener("click", function(){
+        if(confirm("Annuler ce tournoi en cours\u00a0?")){
+          state.current = null;
+          mutate();
+        }
+      });
+    }
+    document.querySelectorAll('[data-action="remove-tournament"]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        state.tournaments = state.tournaments.filter(function(t){ return t.id!==id; });
+        mutate();
+      });
+    });
+    var resetBtn = document.getElementById("reset-btn");
+    if(resetBtn){
+      resetBtn.addEventListener("click", function(){
+        if(confirm("R\u00e9initialiser tout le classement (joueurs et tournois)\u00a0?")){
+          state = {players:[], tournaments:[], current:null};
+          selectedForNewTournament = {};
+          mutate();
+        }
+      });
+    }
+  }
+
+  function init(){
+    var idFromUrl = getRoomFromUrl();
+    if(idFromUrl){
+      roomId = idFromUrl;
+      fetchRoom(roomId).then(function(data){
+        state = data || state;
+        lastSavedJson = JSON.stringify(state);
+        syncOk = true;
+        initFailed = false;
+        render();
+        setInterval(pollRoom, POLL_MS);
+      }).catch(function(err){
+        syncOk = false;
+        initFailed = true;
+        lastErrorDetail = lastErrorDetail || ((err && err.message) ? err.message : "Impossible de joindre le salon.");
+        var fallback = loadLocalFallback();
+        if(fallback) state = fallback;
+        render();
+      });
+    } else {
+      var fallback = loadLocalFallback();
+      if(fallback) state = fallback;
+      createRoom(state).then(function(id){
+        roomId = id;
+        setRoomInUrl(id);
+        lastSavedJson = JSON.stringify(state);
+        syncOk = true;
+        initFailed = false;
+        render();
+        setInterval(pollRoom, POLL_MS);
+      }).catch(function(){
+        syncOk = false;
+        initFailed = true;
+        render();
+      });
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
